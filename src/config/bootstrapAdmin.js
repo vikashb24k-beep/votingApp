@@ -13,6 +13,16 @@ const bootstrapAdmin = async () => {
     return;
   }
 
+  const existingUserWithAdminAadhar = await User.findOne({ aadharNumber: adminAadharNumber }).select("+password");
+  if (existingUserWithAdminAadhar) {
+    existingUserWithAdminAadhar.role = "admin";
+    existingUserWithAdminAadhar.name = process.env.ADMIN_NAME || existingUserWithAdminAadhar.name;
+    existingUserWithAdminAadhar.password = adminPassword;
+    await existingUserWithAdminAadhar.save();
+    console.log("Existing user promoted to admin");
+    return;
+  }
+
   const admin = new User({
     name: process.env.ADMIN_NAME || "Admin",
     aadharNumber: adminAadharNumber,

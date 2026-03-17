@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import apiClient from "../api/client";
+import { getApiErrorMessage } from "../utils/getApiErrorMessage";
 
 function VoteCountsPage() {
   const [candidates, setCandidates] = useState([]);
@@ -11,8 +12,9 @@ function VoteCountsPage() {
       try {
         const { data } = await apiClient.get("/vote/counts");
         setCandidates(data.candidates);
+        setError("");
       } catch (requestError) {
-        setError(requestError.response?.data?.message || "Unable to fetch vote counts");
+        setError(getApiErrorMessage(requestError, "Unable to fetch vote counts"));
       } finally {
         setLoading(false);
       }

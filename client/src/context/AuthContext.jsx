@@ -10,7 +10,17 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem(STORAGE_TOKEN_KEY));
   const [user, setUser] = useState(() => {
     const rawUser = localStorage.getItem(STORAGE_USER_KEY);
-    return rawUser ? JSON.parse(rawUser) : null;
+
+    if (!rawUser) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(rawUser);
+    } catch (error) {
+      localStorage.removeItem(STORAGE_USER_KEY);
+      return null;
+    }
   });
   const [bootstrapping, setBootstrapping] = useState(Boolean(token));
 

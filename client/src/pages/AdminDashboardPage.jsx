@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import apiClient from "../api/client";
+import { getApiErrorMessage } from "../utils/getApiErrorMessage";
 
 const emptyForm = { name: "", party: "" };
 
@@ -16,8 +17,9 @@ function AdminDashboardPage() {
     try {
       const { data } = await apiClient.get("/candidates");
       setCandidates(data.candidates);
+      setError("");
     } catch (requestError) {
-      setError(requestError.response?.data?.message || "Unable to load candidates");
+      setError(getApiErrorMessage(requestError, "Unable to load candidates"));
     } finally {
       setLoading(false);
     }
@@ -46,7 +48,7 @@ function AdminDashboardPage() {
       setEditingId("");
       await fetchCandidates();
     } catch (requestError) {
-      setError(requestError.response?.data?.message || "Unable to save candidate");
+      setError(getApiErrorMessage(requestError, "Unable to save candidate"));
     } finally {
       setSubmitting(false);
     }
@@ -66,7 +68,7 @@ function AdminDashboardPage() {
       setMessage("Candidate deleted successfully");
       await fetchCandidates();
     } catch (requestError) {
-      setError(requestError.response?.data?.message || "Unable to delete candidate");
+      setError(getApiErrorMessage(requestError, "Unable to delete candidate"));
     }
   };
 

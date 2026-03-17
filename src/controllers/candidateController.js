@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Candidate = require("../models/Candidate");
+const Vote = require("../models/Vote");
 
 const isValidCandidateId = (candidateId) => mongoose.Types.ObjectId.isValid(candidateId);
 
@@ -53,11 +54,18 @@ const deleteCandidate = async (req, res) => {
     return res.status(400).json({ message: "Invalid candidate id" });
   }
 
-  const candidate = await Candidate.findByIdAndDelete(req.params.candidateId);
+  const candidate = await Candidate.findById(req.params.candidateId);
 
   if (!candidate) {
     return res.status(404).json({ message: "Candidate not found" });
   }
+
+  const hasRecordedVotes = candidate.voteCount > 0 || (await Vote.exists({ candidateId: candidate._id }));
+  if (hasRecordedVotes) {
+    return res.status(409).json({ message: "Cannot delete a candidate with recorded votes" });
+  }
+
+  await candidate.deleteOne();
 
   res.status(200).json({ message: "Candidate deleted successfully" });
 };

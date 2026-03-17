@@ -37,17 +37,31 @@ const castVote = async (req, res) => {
     return res.status(400).json({ message: "You have already voted" });
   }
 
+  let createdVote = null;
+
   try {
-    await Vote.create({
+    createdVote = await Vote.create({
       userId: req.user._id,
       candidateId,
     });
+
+    const updatedCandidate = await Candidate.findByIdAndUpdate(candidateId, { $inc: { voteCount: 1 } });
+    if (!updatedCandidate) {
+      throw new Error("Candidate not found while saving vote");
+    }
   } catch (error) {
     await User.findByIdAndUpdate(req.user._id, { $set: { hasVoted: false } });
-    return res.status(400).json({ message: "Vote already recorded for this user" });
-  }
 
-  await Candidate.findByIdAndUpdate(candidateId, { $inc: { voteCount: 1 } });
+    if (createdVote?._id) {
+      await Vote.findByIdAndDelete(createdVote._id);
+    }
+
+    if (error?.code === 11000) {
+      return res.status(400).json({ message: "Vote already recorded for this user" });
+    }
+
+    throw error;
+  }
 
   res.status(200).json({
     message: "Vote cast successfully",

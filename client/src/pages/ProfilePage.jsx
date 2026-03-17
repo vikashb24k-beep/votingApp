@@ -1,6 +1,7 @@
 import { useState } from "react";
 import apiClient from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import { getApiErrorMessage } from "../utils/getApiErrorMessage";
 
 function ProfilePage() {
   const { user } = useAuth();
@@ -20,7 +21,7 @@ function ProfilePage() {
       setMessage(data.message);
       setForm({ currentPassword: "", newPassword: "" });
     } catch (requestError) {
-      setError(requestError.response?.data?.message || "Unable to update password");
+      setError(getApiErrorMessage(requestError, "Unable to update password"));
     } finally {
       setLoading(false);
     }
