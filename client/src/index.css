@@ -1,0 +1,503 @@
+:root {
+  color-scheme: light;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(255, 195, 113, 0.42), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(39, 102, 120, 0.35), transparent 28%),
+    linear-gradient(135deg, #f7f2e7 0%, #edf3f4 48%, #f9fcff 100%);
+  color: #172126;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.auth-layout,
+.app-shell {
+  min-height: 100vh;
+}
+
+.auth-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+}
+
+.auth-hero {
+  position: relative;
+  padding: 4rem;
+  background:
+    linear-gradient(160deg, rgba(15, 88, 87, 0.92), rgba(12, 35, 44, 0.96)),
+    linear-gradient(120deg, #0f5558, #123842);
+  color: #eff7f7;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hero-orb {
+  position: absolute;
+  width: 18rem;
+  height: 18rem;
+  background: rgba(255, 191, 92, 0.32);
+  border-radius: 50%;
+  top: -4rem;
+  right: -5rem;
+  filter: blur(10px);
+}
+
+.auth-panel,
+.panel {
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(23, 33, 38, 0.08);
+  box-shadow: 0 18px 60px rgba(17, 37, 44, 0.12);
+  border-radius: 24px;
+}
+
+.auth-panel {
+  margin: auto;
+  width: min(30rem, calc(100% - 2rem));
+  padding: 2rem;
+}
+
+.panel {
+  padding: 1.5rem;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  color: #9b5d10;
+  margin-bottom: 0.5rem;
+}
+
+.page-title {
+  margin: 0;
+  font-size: clamp(1.8rem, 2vw, 2.6rem);
+}
+
+.form-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-grid label {
+  display: grid;
+  gap: 0.45rem;
+  color: #304046;
+  font-weight: 600;
+}
+
+.form-grid input {
+  border: 1px solid rgba(23, 33, 38, 0.15);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+button {
+  border: none;
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+  background: linear-gradient(135deg, #d66824, #c04c34);
+  color: white;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(192, 76, 52, 0.2);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
+.secondary-button {
+  background: #e7eef0;
+  color: #23373d;
+}
+
+.danger-button {
+  background: linear-gradient(135deg, #8f1d1d, #c53e3e);
+}
+
+.auth-switch,
+.hint-text,
+.error-text,
+.success-text {
+  margin: 0;
+}
+
+.hint-text {
+  margin-top: 1rem;
+  color: #4c646a;
+  line-height: 1.5;
+}
+
+.error-text {
+  color: #9a2323;
+}
+
+.success-text {
+  color: #136a3e;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 18rem 1fr;
+}
+
+.sidebar {
+  padding: 2rem 1.5rem;
+  background: rgba(15, 39, 47, 0.95);
+  color: #e8efef;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.brand {
+  font-size: 1.9rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.brand-copy {
+  color: rgba(232, 239, 239, 0.78);
+  line-height: 1.6;
+}
+
+.nav-links {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.nav-links a {
+  text-decoration: none;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  color: rgba(232, 239, 239, 0.84);
+}
+
+.nav-links a.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.user-card {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.user-avatar,
+.profile-avatar,
+.candidate-badge {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+}
+
+.user-avatar {
+  background: linear-gradient(135deg, #f0a14d, #d66824);
+  color: white;
+}
+
+.profile-avatar {
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, #0f5558, #1f7c82);
+  color: white;
+}
+
+.candidate-badge {
+  background: linear-gradient(135deg, #173f47, #26717c);
+  color: white;
+}
+
+.mini-chip,
+.top-banner-meta span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.mini-chip {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.content-area {
+  padding: 2rem;
+}
+
+.top-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.2rem 1.35rem;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(23, 33, 38, 0.08);
+}
+
+.top-banner-meta {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.top-banner-meta span {
+  background: rgba(15, 39, 47, 0.07);
+}
+
+.page-shell {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+}
+
+.status-chip {
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(23, 33, 38, 0.08);
+  font-weight: 700;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.compact-stats {
+  margin-bottom: 1rem;
+}
+
+.stat-card {
+  padding: 1.15rem;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(23, 33, 38, 0.08);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.stat-card span {
+  color: #60767c;
+  font-size: 0.84rem;
+}
+
+.stat-card strong {
+  font-size: 1.3rem;
+}
+
+.highlight-card {
+  background: linear-gradient(135deg, rgba(15, 85, 88, 0.96), rgba(28, 109, 112, 0.92));
+  color: white;
+}
+
+.highlight-card span {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.candidate-card,
+.list-card {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(23, 33, 38, 0.08);
+  border-radius: 22px;
+  padding: 1.2rem;
+  box-shadow: 0 12px 32px rgba(15, 39, 47, 0.08);
+}
+
+.candidate-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.candidate-card-top {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.candidate-party {
+  color: #9b5d10;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+}
+
+.candidate-card h3,
+.list-card p,
+.list-card span,
+.profile-subtitle {
+  margin: 0;
+}
+
+.candidate-progress {
+  height: 0.6rem;
+  border-radius: 999px;
+  background: rgba(23, 63, 71, 0.08);
+  overflow: hidden;
+}
+
+.candidate-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #d66824, #f0a14d);
+}
+
+.candidate-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.count-label {
+  display: block;
+  color: #66777c;
+  font-size: 0.8rem;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.results-table th,
+.results-table td {
+  text-align: left;
+  padding: 0.9rem 0.4rem;
+  border-bottom: 1px solid rgba(23, 33, 38, 0.08);
+}
+
+.profile-grid,
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.details-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.details-list div {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.details-list dt {
+  color: #6a7b80;
+}
+
+.details-list dd {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.stack-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.list-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.inline-actions {
+  display: flex;
+  gap: 0.65rem;
+}
+
+@media (max-width: 920px) {
+  .auth-layout,
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-hero {
+    min-height: 18rem;
+    padding: 2.5rem 1.5rem;
+  }
+
+  .content-area {
+    padding: 1.25rem;
+  }
+
+  .top-banner,
+  .page-header,
+  .candidate-footer,
+  .list-card,
+  .profile-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

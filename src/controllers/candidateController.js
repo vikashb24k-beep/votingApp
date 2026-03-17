@@ -1,0 +1,69 @@
+const Candidate = require("../models/Candidate");
+
+const getCandidates = async (req, res) => {
+  const candidates = await Candidate.find().sort({ voteCount: -1, createdAt: 1 });
+  res.status(200).json({ candidates });
+};
+
+const addCandidate = async (req, res) => {
+  const { name, party } = req.body;
+
+  if (!name || !name.trim()) {
+    return res.status(400).json({ message: "Candidate name is required" });
+  }
+
+  const candidate = await Candidate.create({
+    name: name.trim(),
+    party: typeof party === "string" ? party.trim() : "",
+  });
+
+  res.status(201).json({ candidate });
+};
+
+const updateCandidate = async (req, res) => {
+  const { name, party } = req.body;
+  const candidate = await Candidate.findById(req.params.candidateId);
+
+  if (!candidate) {
+    return res.status(404).json({ message: "Candidate not found" });
+  }
+
+  if (typeof name === "string" && name.trim()) {
+    candidate.name = name.trim();
+  }
+
+  if (typeof party === "string") {
+    candidate.party = party.trim();
+  }
+
+  await candidate.save();
+  res.status(200).json({ candidate });
+};
+
+const deleteCandidate = async (req, res) => {
+  const candidate = await Candidate.findByIdAndDelete(req.params.candidateId);
+
+  if (!candidate) {
+    return res.status(404).json({ message: "Candidate not found" });
+  }
+
+  res.status(200).json({ message: "Candidate deleted successfully" });
+};
+
+const getVoteCounts = async (req, res) => {
+  const candidates = await Candidate.find({}, { name: 1, party: 1, voteCount: 1 }).sort({
+    voteCount: -1,
+    createdAt: 1,
+  });
+
+  res.status(200).json({ candidates });
+};
+
+module.exports = {
+  getCandidates,
+  addCandidate,
+  createCandidate: addCandidate,
+  updateCandidate,
+  deleteCandidate,
+  getVoteCounts,
+};

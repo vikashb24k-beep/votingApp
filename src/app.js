@@ -1,0 +1,33 @@
+const express = require("express");
+const cors = require("cors");
+const authRoutes = require("./routes/authRoutes");
+const candidateRoutes = require("./routes/candidateRoutes");
+const voteRoutes = require("./routes/voteRoutes");
+const profileRoutes = require("./routes/profileRoutes");
+const { notFoundHandler, errorHandler } = require("./middleware/errorHandlers");
+
+const app = express();
+const allowedOrigin = process.env.CLIENT_URL || "http://localhost:5173";
+
+app.use(
+  cors({
+    origin: allowedOrigin,
+    credentials: true,
+  })
+);
+app.use(express.json());
+
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
+app.use("/", authRoutes);
+app.use("/", voteRoutes);
+app.use("/", profileRoutes);
+app.use("/api/candidates", candidateRoutes);
+app.use("/candidates", candidateRoutes);
+
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+module.exports = app;
