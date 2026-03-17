@@ -1,6 +1,14 @@
 const mongoose = require("mongoose");
 
 const repairUserIndexes = async () => {
+  const usersCollectionExists = await mongoose.connection.db
+    .listCollections({ name: "users" }, { nameOnly: true })
+    .hasNext();
+
+  if (!usersCollectionExists) {
+    return;
+  }
+
   const collection = mongoose.connection.collection("users");
   const indexes = await collection.indexes();
 

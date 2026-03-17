@@ -1,4 +1,7 @@
+const mongoose = require("mongoose");
 const Candidate = require("../models/Candidate");
+
+const isValidCandidateId = (candidateId) => mongoose.Types.ObjectId.isValid(candidateId);
 
 const getCandidates = async (req, res) => {
   const candidates = await Candidate.find().sort({ voteCount: -1, createdAt: 1 });
@@ -22,6 +25,11 @@ const addCandidate = async (req, res) => {
 
 const updateCandidate = async (req, res) => {
   const { name, party } = req.body;
+
+  if (!isValidCandidateId(req.params.candidateId)) {
+    return res.status(400).json({ message: "Invalid candidate id" });
+  }
+
   const candidate = await Candidate.findById(req.params.candidateId);
 
   if (!candidate) {
@@ -41,6 +49,10 @@ const updateCandidate = async (req, res) => {
 };
 
 const deleteCandidate = async (req, res) => {
+  if (!isValidCandidateId(req.params.candidateId)) {
+    return res.status(400).json({ message: "Invalid candidate id" });
+  }
+
   const candidate = await Candidate.findByIdAndDelete(req.params.candidateId);
 
   if (!candidate) {

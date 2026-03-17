@@ -23,7 +23,7 @@ function LoginPage() {
         aadharNumber: form.aadharNumber.trim(),
       });
       login(data.token, data.user);
-      navigate("/candidates");
+      navigate(data.user.role === "admin" ? "/admin" : "/candidates");
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, "Unable to login"));
     } finally {
