@@ -3,12 +3,14 @@ const assert = require("node:assert/strict");
 
 const User = require("../src/models/User");
 const Candidate = require("../src/models/Candidate");
+const Otp = require("../src/models/Otp");
 const Vote = require("../src/models/Vote");
 const ensureIndexes = require("../src/config/ensureIndexes");
 
 test("ensureIndexes creates indexes for all persisted models", async () => {
   const originalUserCreateIndexes = User.createIndexes;
   const originalCandidateCreateIndexes = Candidate.createIndexes;
+  const originalOtpCreateIndexes = Otp.createIndexes;
   const originalVoteCreateIndexes = Vote.createIndexes;
 
   const calls = [];
@@ -18,16 +20,20 @@ test("ensureIndexes creates indexes for all persisted models", async () => {
   Candidate.createIndexes = async () => {
     calls.push("Candidate");
   };
+  Otp.createIndexes = async () => {
+    calls.push("Otp");
+  };
   Vote.createIndexes = async () => {
     calls.push("Vote");
   };
 
   try {
     await ensureIndexes();
-    assert.deepEqual(calls.sort(), ["Candidate", "User", "Vote"]);
+    assert.deepEqual(calls.sort(), ["Candidate", "Otp", "User", "Vote"]);
   } finally {
     User.createIndexes = originalUserCreateIndexes;
     Candidate.createIndexes = originalCandidateCreateIndexes;
+    Otp.createIndexes = originalOtpCreateIndexes;
     Vote.createIndexes = originalVoteCreateIndexes;
   }
 });

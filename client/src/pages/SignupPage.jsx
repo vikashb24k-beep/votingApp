@@ -9,9 +9,95 @@ function SignupPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [form, setForm] = useState({ name: "", email: "", aadharNumber: "", password: "" });
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [verificationToken, setVerificationToken] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [error, setError] = useState("");
   const [hint, setHint] = useState("");
+  const [otpMessage, setOtpMessage] = useState("");
+
+  const resetOtpState = () => {
+    setOtp("");
+    setOtpSent(false);
+    setOtpVerified(false);
+    setVerificationToken("");
+    setOtpMessage("");
+  };
+
+  const handleEmailChange = (value) => {
+    setForm({ ...form, email: value });
+    resetOtpState();
+    setError("");
+    setHint("");
+  };
+
+  const handleSendOtp = async () => {
+    const email = form.email.trim().toLowerCase();
+
+    setSendingOtp(true);
+    setError("");
+    setHint("");
+    setOtpMessage("");
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Enter a valid email address");
+      setSendingOtp(false);
+      return;
+    }
+
+    try {
+      const { data } = await apiClient.post("/auth/send-otp", { email });
+      setForm({ ...form, email });
+      setOtpSent(true);
+      setOtpVerified(false);
+      setVerificationToken("");
+      setOtpMessage(data.message || "OTP sent successfully");
+    } catch (requestError) {
+      const message = getApiErrorMessage(requestError, "Unable to send OTP");
+      setError(message);
+
+      if (message.toLowerCase().includes("already exists")) {
+        setHint("This email is already registered. Try logging in instead.");
+      }
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const email = form.email.trim().toLowerCase();
+
+    setVerifyingOtp(true);
+    setError("");
+    setHint("");
+    setOtpMessage("");
+
+    if (!otp.trim()) {
+      setError("Enter the OTP sent to your email");
+      setVerifyingOtp(false);
+      return;
+    }
+
+    try {
+      const { data } = await apiClient.post("/auth/verify-otp", {
+        email,
+        otp: otp.trim(),
+      });
+      setOtpVerified(true);
+      setVerificationToken(data.verificationToken);
+      setOtpMessage(data.message || "OTP verified successfully");
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, "Unable to verify OTP"));
+      setOtpVerified(false);
+      setVerificationToken("");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -21,6 +107,12 @@ function SignupPage() {
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
       setError("Enter a valid email address");
+      setLoading(false);
+      return;
+    }
+
+    if (!otpVerified || !verificationToken) {
+      setError("Verify your email OTP before creating the account");
       setLoading(false);
       return;
     }
@@ -38,11 +130,12 @@ function SignupPage() {
     }
 
     try {
-      const { data } = await apiClient.post("/signup", {
+      const { data } = await apiClient.post("/auth/register", {
         ...form,
         name: form.name.trim(),
         email: form.email.trim().toLowerCase(),
         aadharNumber: form.aadharNumber.trim(),
+        verificationToken,
       });
       login(data.token, data.user);
       navigate("/candidates");
@@ -97,13 +190,37 @@ function SignupPage() {
           Email Address
           <input
             name="email"
-            onChange={(event) => setForm({ ...form, email: event.target.value })}
+            onChange={(event) => handleEmailChange(event.target.value)}
             placeholder="name@example.com"
             required
             type="email"
             value={form.email}
           />
         </label>
+
+        <button className="secondary-button" disabled={sendingOtp || otpVerified} onClick={handleSendOtp} type="button">
+          {sendingOtp ? "Sending OTP..." : otpVerified ? "OTP Verified" : "Send OTP"}
+        </button>
+
+        {otpSent ? (
+          <>
+            <label>
+              OTP
+              <input
+                inputMode="numeric"
+                maxLength="6"
+                minLength="6"
+                onChange={(event) => setOtp(event.target.value.replace(/\D/g, ""))}
+                placeholder="Enter 6-digit OTP"
+                value={otp}
+              />
+            </label>
+
+            <button className="secondary-button" disabled={verifyingOtp || otpVerified} onClick={handleVerifyOtp} type="button">
+              {verifyingOtp ? "Verifying OTP..." : otpVerified ? "OTP Verified" : "Verify OTP"}
+            </button>
+          </>
+        ) : null}
 
         <label>
           Password
@@ -119,9 +236,10 @@ function SignupPage() {
         </label>
 
         {error ? <p className="error-text">{error}</p> : null}
+        {otpMessage ? <p className="success-text">{otpMessage}</p> : null}
         {hint ? <p className="hint-text">{hint}</p> : null}
 
-        <button disabled={loading} type="submit">
+        <button disabled={loading || !otpVerified} type="submit">
           {loading ? "Creating account..." : "Signup"}
         </button>
       </form>
