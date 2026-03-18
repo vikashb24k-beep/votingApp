@@ -8,7 +8,7 @@ import { getApiErrorMessage } from "../utils/getApiErrorMessage";
 function SignupPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [form, setForm] = useState({ name: "", aadharNumber: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", aadharNumber: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [hint, setHint] = useState("");
@@ -18,6 +18,12 @@ function SignupPage() {
     setLoading(true);
     setError("");
     setHint("");
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setError("Enter a valid email address");
+      setLoading(false);
+      return;
+    }
 
     if (form.aadharNumber.length !== 12) {
       setError("Aadhar number must be exactly 12 digits");
@@ -35,6 +41,7 @@ function SignupPage() {
       const { data } = await apiClient.post("/signup", {
         ...form,
         name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
         aadharNumber: form.aadharNumber.trim(),
       });
       login(data.token, data.user);
@@ -83,6 +90,18 @@ function SignupPage() {
             placeholder="123456789012"
             required
             value={form.aadharNumber}
+          />
+        </label>
+
+        <label>
+          Email Address
+          <input
+            name="email"
+            onChange={(event) => setForm({ ...form, email: event.target.value })}
+            placeholder="name@example.com"
+            required
+            type="email"
+            value={form.email}
           />
         </label>
 

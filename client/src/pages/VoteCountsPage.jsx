@@ -5,26 +5,44 @@ import { getApiErrorMessage } from "../utils/getApiErrorMessage";
 function VoteCountsPage() {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchCounts = async () => {
-      try {
-        const { data } = await apiClient.get("/vote/counts");
-        setCandidates(data.candidates);
-        setError("");
-      } catch (requestError) {
-        setError(getApiErrorMessage(requestError, "Unable to fetch vote counts"));
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchCounts = async ({ silent = false } = {}) => {
+    if (silent) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
 
+    try {
+      const { data } = await apiClient.get("/vote/counts");
+      setCandidates(data.candidates);
+      setError("");
+    } catch (requestError) {
+      setError(getApiErrorMessage(requestError, "Unable to fetch vote counts"));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     fetchCounts();
-    const intervalId = window.setInterval(fetchCounts, 4000);
+  }, []);
+
+  useEffect(() => {
+    if (!autoRefreshEnabled) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      fetchCounts({ silent: true });
+    }, 4000);
 
     return () => window.clearInterval(intervalId);
-  }, []);
+  }, [autoRefreshEnabled]);
 
   const totalVotes = candidates.reduce((sum, candidate) => sum + candidate.voteCount, 0);
   const leader = candidates[0];
@@ -35,7 +53,15 @@ function VoteCountsPage() {
         <div>
           <p className="eyebrow">Live Counting</p>
           <h2>Current vote standings</h2>
-          <p>This screen refreshes automatically every few seconds for near real-time results.</p>
+          <p>Watch the latest standings and refresh them any time without leaving the page.</p>
+        </div>
+        <div className="inline-actions">
+          <button className="secondary-button" onClick={() => setAutoRefreshEnabled((value) => !value)} type="button">
+            {autoRefreshEnabled ? "Turn Refresh Off" : "Turn Refresh On"}
+          </button>
+          <button className="secondary-button" disabled={loading || refreshing} onClick={() => fetchCounts({ silent: true })} type="button">
+            {refreshing ? "Refreshing..." : "Refresh Now"}
+          </button>
         </div>
       </div>
 
@@ -50,7 +76,7 @@ function VoteCountsPage() {
         </div>
         <div className="stat-card highlight-card">
           <span>Refresh Mode</span>
-          <strong>4 second polling</strong>
+          <strong>{autoRefreshEnabled ? "4 second polling" : "Manual only"}</strong>
         </div>
       </div>
 

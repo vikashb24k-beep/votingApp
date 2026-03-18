@@ -59,8 +59,8 @@ function AppShell() {
 
           <div className="user-meta-grid">
             <div>
-              <span>ID</span>
-              <strong>{user?.aadharNumber || "Not available"}</strong>
+              <span>Sign-in</span>
+              <strong>{user?.email || user?.aadharNumber || "Not available"}</strong>
             </div>
             <div>
               <span>Status</span>

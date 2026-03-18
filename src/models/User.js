@@ -8,6 +8,14 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    email: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      lowercase: true,
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Email address is invalid"],
+    },
     aadharNumber: {
       type: String,
       required: true,
@@ -53,6 +61,7 @@ userSchema.methods.toSafeObject = function toSafeObject() {
   return {
     id: this._id.toString(),
     name: this.name,
+    email: this.email || "",
     aadharNumber: this.aadharNumber,
     role: this.role,
     hasVoted: this.hasVoted,

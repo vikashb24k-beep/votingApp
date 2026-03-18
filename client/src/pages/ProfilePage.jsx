@@ -44,6 +44,10 @@ function ProfilePage() {
             <dd>{user?.role}</dd>
           </div>
           <div>
+            <dt>Email</dt>
+            <dd>{user?.email || "Not provided"}</dd>
+          </div>
+          <div>
             <dt>Aadhar Number</dt>
             <dd>{user?.aadharNumber}</dd>
           </div>

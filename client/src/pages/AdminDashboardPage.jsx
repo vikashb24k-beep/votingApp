@@ -7,6 +7,7 @@ const emptyForm = { name: "", party: "" };
 function AdminDashboardPage() {
   const [candidates, setCandidates] = useState([]);
   const [form, setForm] = useState(emptyForm);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -35,6 +36,12 @@ function AdminDashboardPage() {
     setError("");
     setMessage("");
 
+    if (isEditMode && !editingId) {
+      setError("Select a candidate before saving in edit mode");
+      setSubmitting(false);
+      return;
+    }
+
     try {
       if (editingId) {
         await apiClient.put(`/candidates/${editingId}`, form);
@@ -55,8 +62,28 @@ function AdminDashboardPage() {
   };
 
   const handleEdit = (candidate) => {
+    if (!isEditMode) {
+      setError("Turn edit mode on before editing a candidate");
+      setMessage("");
+      return;
+    }
+
+    setError("");
+    setMessage("");
     setEditingId(candidate._id);
     setForm({ name: candidate.name, party: candidate.party || "" });
+  };
+
+  const handleEditModeToggle = () => {
+    const nextEditMode = !isEditMode;
+    setIsEditMode(nextEditMode);
+    setError("");
+    setMessage("");
+
+    if (!nextEditMode) {
+      setEditingId("");
+      setForm(emptyForm);
+    }
   };
 
   const handleDelete = async (candidateId) => {
@@ -76,7 +103,7 @@ function AdminDashboardPage() {
     <section className="page-shell admin-grid">
       <div className="panel">
         <p className="eyebrow">Admin Dashboard</p>
-        <h2>{editingId ? "Edit candidate" : "Add candidate"}</h2>
+        <h2>{isEditMode ? (editingId ? "Edit candidate" : "Select a candidate to edit") : "Add candidate"}</h2>
         <div className="stats-grid compact-stats">
           <div className="stat-card">
             <span>Total Candidates</span>
@@ -84,14 +111,18 @@ function AdminDashboardPage() {
           </div>
           <div className="stat-card highlight-card">
             <span>Editing Mode</span>
-            <strong>{editingId ? "Active" : "Off"}</strong>
+            <strong>{isEditMode ? "On" : "Off"}</strong>
           </div>
         </div>
+        <button className="secondary-button" onClick={handleEditModeToggle} type="button">
+          {isEditMode ? "Turn Edit Mode Off" : "Turn Edit Mode On"}
+        </button>
         <form className="form-grid" onSubmit={handleSubmit}>
           <label>
             Candidate Name
             <input
               onChange={(event) => setForm({ ...form, name: event.target.value })}
+              disabled={isEditMode && !editingId}
               required
               value={form.name}
             />
@@ -99,16 +130,20 @@ function AdminDashboardPage() {
 
           <label>
             Party
-            <input onChange={(event) => setForm({ ...form, party: event.target.value })} value={form.party} />
+            <input
+              disabled={isEditMode && !editingId}
+              onChange={(event) => setForm({ ...form, party: event.target.value })}
+              value={form.party}
+            />
           </label>
 
           {message ? <p className="success-text">{message}</p> : null}
           {error ? <p className="error-text">{error}</p> : null}
 
           <button disabled={submitting} type="submit">
-            {submitting ? "Saving..." : editingId ? "Update Candidate" : "Add Candidate"}
+            {submitting ? "Saving..." : isEditMode ? "Update Candidate" : "Add Candidate"}
           </button>
-          {editingId ? (
+          {isEditMode ? (
             <button
               className="secondary-button"
               onClick={() => {

@@ -2,15 +2,22 @@ const User = require("../models/User");
 const { signToken } = require("../middleware/auth");
 
 const normalizeAadhar = (value) => String(value || "").trim();
+const normalizeEmail = (value) => String(value || "").trim().toLowerCase();
 const normalizeName = (value) => String(value || "").trim();
+const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 const signup = async (req, res) => {
   const name = normalizeName(req.body.name);
+  const email = normalizeEmail(req.body.email);
   const aadharNumber = normalizeAadhar(req.body.aadharNumber);
   const password = String(req.body.password || "");
 
-  if (!name || !aadharNumber || !password) {
-    return res.status(400).json({ message: "Name, aadhar number, and password are required" });
+  if (!name || !email || !aadharNumber || !password) {
+    return res.status(400).json({ message: "Name, email, aadhar number, and password are required" });
+  }
+
+  if (!isEmail(email)) {
+    return res.status(400).json({ message: "Email address is invalid" });
   }
 
   if (!/^\d{12}$/.test(aadharNumber)) {
@@ -21,13 +28,21 @@ const signup = async (req, res) => {
     return res.status(400).json({ message: "Password must be at least 6 characters" });
   }
 
-  const existingUser = await User.findOne({ aadharNumber });
-  if (existingUser) {
+  const existingUser = await User.findOne({
+    $or: [{ aadharNumber }, { email }],
+  });
+
+  if (existingUser?.aadharNumber === aadharNumber) {
     return res.status(409).json({ message: "A user with this aadhar number already exists. Please login instead." });
+  }
+
+  if (existingUser?.email === email) {
+    return res.status(409).json({ message: "A user with this email already exists. Please login instead." });
   }
 
   const user = await User.create({
     name,
+    email,
     aadharNumber,
     password,
   });
@@ -40,14 +55,18 @@ const signup = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const aadharNumber = normalizeAadhar(req.body.aadharNumber);
+  const email = normalizeEmail(req.body.email);
   const password = String(req.body.password || "");
 
-  if (!aadharNumber || !password) {
-    return res.status(400).json({ message: "Aadhar number and password are required" });
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
   }
 
-  const user = await User.findOne({ aadharNumber }).select("+password");
+  if (!isEmail(email)) {
+    return res.status(400).json({ message: "Enter a valid email address" });
+  }
+
+  const user = await User.findOne({ email }).select("+password");
   if (!user) {
     return res.status(401).json({ message: "Invalid credentials" });
   }
