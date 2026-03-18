@@ -3,6 +3,7 @@ const Candidate = require("../models/Candidate");
 const Vote = require("../models/Vote");
 
 const isValidCandidateId = (candidateId) => mongoose.Types.ObjectId.isValid(candidateId);
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const getCandidates = async (req, res) => {
   const candidates = await Candidate.find().sort({ voteCount: -1, createdAt: 1 });
@@ -11,13 +12,21 @@ const getCandidates = async (req, res) => {
 
 const addCandidate = async (req, res) => {
   const { name, party } = req.body;
+  const normalizedName = typeof name === "string" ? name.trim() : "";
 
-  if (!name || !name.trim()) {
+  if (!normalizedName) {
     return res.status(400).json({ message: "Candidate name is required" });
   }
 
+  const existingCandidate = await Candidate.findOne({
+    name: { $regex: `^${escapeRegex(normalizedName)}$`, $options: "i" },
+  });
+  if (existingCandidate) {
+    return res.status(409).json({ message: "A candidate with this name already exists" });
+  }
+
   const candidate = await Candidate.create({
-    name: name.trim(),
+    name: normalizedName,
     party: typeof party === "string" ? party.trim() : "",
   });
 
@@ -26,9 +35,14 @@ const addCandidate = async (req, res) => {
 
 const updateCandidate = async (req, res) => {
   const { name, party } = req.body;
+  const normalizedName = typeof name === "string" ? name.trim() : null;
 
   if (!isValidCandidateId(req.params.candidateId)) {
     return res.status(400).json({ message: "Invalid candidate id" });
+  }
+
+  if (typeof name === "string" && !normalizedName) {
+    return res.status(400).json({ message: "Candidate name cannot be empty" });
   }
 
   const candidate = await Candidate.findById(req.params.candidateId);
@@ -37,8 +51,16 @@ const updateCandidate = async (req, res) => {
     return res.status(404).json({ message: "Candidate not found" });
   }
 
-  if (typeof name === "string" && name.trim()) {
-    candidate.name = name.trim();
+  if (typeof name === "string") {
+    const existingCandidate = await Candidate.findOne({
+      _id: { $ne: candidate._id },
+      name: { $regex: `^${escapeRegex(normalizedName)}$`, $options: "i" },
+    });
+    if (existingCandidate) {
+      return res.status(409).json({ message: "A candidate with this name already exists" });
+    }
+
+    candidate.name = normalizedName;
   }
 
   if (typeof party === "string") {

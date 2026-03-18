@@ -5,11 +5,63 @@ const AuthContext = createContext(null);
 
 const STORAGE_TOKEN_KEY = "vote-token";
 const STORAGE_USER_KEY = "vote-user";
+const getBrowserStorage = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return window.localStorage;
+  } catch (error) {
+    return null;
+  }
+};
+
+const hasStorage = () => Boolean(getBrowserStorage());
+
+const readStorage = (key) => {
+  const storage = getBrowserStorage();
+  if (!storage) {
+    return null;
+  }
+
+  try {
+    return storage.getItem(key);
+  } catch (error) {
+    return null;
+  }
+};
+
+const writeStorage = (key, value) => {
+  const storage = getBrowserStorage();
+  if (!storage) {
+    return;
+  }
+
+  try {
+    storage.setItem(key, value);
+  } catch (error) {
+    // Ignore storage write failures so auth state can still live in memory.
+  }
+};
+
+const removeStorage = (key) => {
+  const storage = getBrowserStorage();
+  if (!storage) {
+    return;
+  }
+
+  try {
+    storage.removeItem(key);
+  } catch (error) {
+    // Ignore storage cleanup failures to avoid breaking logout/session reset.
+  }
+};
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem(STORAGE_TOKEN_KEY));
+  const [token, setToken] = useState(() => readStorage(STORAGE_TOKEN_KEY));
   const [user, setUser] = useState(() => {
-    const rawUser = localStorage.getItem(STORAGE_USER_KEY);
+    const rawUser = readStorage(STORAGE_USER_KEY);
 
     if (!rawUser) {
       return null;
@@ -18,7 +70,7 @@ export function AuthProvider({ children }) {
     try {
       return JSON.parse(rawUser);
     } catch (error) {
-      localStorage.removeItem(STORAGE_USER_KEY);
+      removeStorage(STORAGE_USER_KEY);
       return null;
     }
   });
@@ -27,6 +79,8 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const bootstrap = async () => {
       if (!token) {
+        removeStorage(STORAGE_USER_KEY);
+        setUser(null);
         setBootstrapping(false);
         return;
       }
@@ -34,7 +88,7 @@ export function AuthProvider({ children }) {
       try {
         const { data } = await apiClient.get("/profile");
         setUser(data.user);
-        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(data.user));
+        writeStorage(STORAGE_USER_KEY, JSON.stringify(data.user));
       } catch (error) {
         logout();
       } finally {
@@ -46,8 +100,8 @@ export function AuthProvider({ children }) {
   }, [token]);
 
   const persistSession = (nextToken, nextUser) => {
-    localStorage.setItem(STORAGE_TOKEN_KEY, nextToken);
-    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(nextUser));
+    writeStorage(STORAGE_TOKEN_KEY, nextToken);
+    writeStorage(STORAGE_USER_KEY, JSON.stringify(nextUser));
     setToken(nextToken);
     setUser(nextUser);
   };
@@ -57,8 +111,8 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    localStorage.removeItem(STORAGE_TOKEN_KEY);
-    localStorage.removeItem(STORAGE_USER_KEY);
+    removeStorage(STORAGE_TOKEN_KEY);
+    removeStorage(STORAGE_USER_KEY);
     setToken(null);
     setUser(null);
   };
@@ -66,7 +120,7 @@ export function AuthProvider({ children }) {
   const refreshProfile = async () => {
     const { data } = await apiClient.get("/profile");
     setUser(data.user);
-    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(data.user));
+    writeStorage(STORAGE_USER_KEY, JSON.stringify(data.user));
     return data.user;
   };
 

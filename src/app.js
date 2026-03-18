@@ -4,17 +4,12 @@ const authRoutes = require("./routes/authRoutes");
 const candidateRoutes = require("./routes/candidateRoutes");
 const voteRoutes = require("./routes/voteRoutes");
 const profileRoutes = require("./routes/profileRoutes");
+const { createCorsOptions } = require("./config/corsOptions");
 const { notFoundHandler, errorHandler } = require("./middleware/errorHandlers");
 
 const app = express();
-const allowedOrigin = process.env.CLIENT_URL || "http://localhost:5173";
 
-app.use(
-  cors({
-    origin: allowedOrigin,
-    credentials: true,
-  })
-);
+app.use(cors(createCorsOptions()));
 app.use(express.json());
 
 app.get("/health", (req, res) => {

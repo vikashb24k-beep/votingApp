@@ -3,6 +3,12 @@ const Candidate = require("../models/Candidate");
 const User = require("../models/User");
 const Vote = require("../models/Vote");
 
+const createConflictError = (message) => {
+  const error = new Error(message);
+  error.statusCode = 409;
+  return error;
+};
+
 const castVote = async (req, res) => {
   const { candidateId } = req.params;
 
@@ -47,17 +53,18 @@ const castVote = async (req, res) => {
 
     const updatedCandidate = await Candidate.findByIdAndUpdate(candidateId, { $inc: { voteCount: 1 } });
     if (!updatedCandidate) {
-      throw new Error("Candidate not found while saving vote");
+      throw createConflictError("Candidate was removed before the vote could be finalized");
     }
   } catch (error) {
+    if (error?.code === 11000) {
+      await User.findByIdAndUpdate(req.user._id, { $set: { hasVoted: true } });
+      return res.status(400).json({ message: "Vote already recorded for this user" });
+    }
+
     await User.findByIdAndUpdate(req.user._id, { $set: { hasVoted: false } });
 
     if (createdVote?._id) {
       await Vote.findByIdAndDelete(createdVote._id);
-    }
-
-    if (error?.code === 11000) {
-      return res.status(400).json({ message: "Vote already recorded for this user" });
     }
 
     throw error;

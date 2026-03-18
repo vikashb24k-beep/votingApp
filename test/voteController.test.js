@@ -51,7 +51,11 @@ test("castVote rolls back the vote and user flag when candidate count update fai
     };
     const res = createResponse();
 
-    await assert.rejects(() => castVote(req, res), /Candidate not found while saving vote/);
+    await assert.rejects(async () => castVote(req, res), (error) => {
+      assert.equal(error.message, "Candidate was removed before the vote could be finalized");
+      assert.equal(error.statusCode, 409);
+      return true;
+    });
 
     assert.deepEqual(rollbackCalls, [
       {
@@ -71,5 +75,49 @@ test("castVote rolls back the vote and user flag when candidate count update fai
     User.findByIdAndUpdate = originalUserFindByIdAndUpdate;
     Vote.create = originalVoteCreate;
     Vote.findByIdAndDelete = originalVoteFindByIdAndDelete;
+  }
+});
+
+test("castVote preserves hasVoted when a duplicate vote record already exists", async () => {
+  const originalCandidateFindById = Candidate.findById;
+  const originalUserFindOneAndUpdate = User.findOneAndUpdate;
+  const originalUserFindByIdAndUpdate = User.findByIdAndUpdate;
+  const originalVoteCreate = Vote.create;
+
+  const userUpdates = [];
+
+  Candidate.findById = async () => ({ _id: "507f191e810c19729de860eb" });
+  User.findOneAndUpdate = async () => ({ _id: "507f191e810c19729de860ea" });
+  User.findByIdAndUpdate = async (userId, update) => {
+    userUpdates.push({ userId, update });
+  };
+  Vote.create = async () => {
+    const error = new Error("duplicate vote");
+    error.code = 11000;
+    throw error;
+  };
+
+  try {
+    const req = {
+      params: { candidateId: "507f191e810c19729de860eb" },
+      user: { _id: "507f191e810c19729de860ea", role: "user" },
+    };
+    const res = createResponse();
+
+    await castVote(req, res);
+
+    assert.equal(res.statusCode, 400);
+    assert.deepEqual(res.body, { message: "Vote already recorded for this user" });
+    assert.deepEqual(userUpdates, [
+      {
+        userId: "507f191e810c19729de860ea",
+        update: { $set: { hasVoted: true } },
+      },
+    ]);
+  } finally {
+    Candidate.findById = originalCandidateFindById;
+    User.findOneAndUpdate = originalUserFindOneAndUpdate;
+    User.findByIdAndUpdate = originalUserFindByIdAndUpdate;
+    Vote.create = originalVoteCreate;
   }
 });

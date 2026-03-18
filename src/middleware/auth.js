@@ -1,13 +1,21 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+const getJwtSecret = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is missing");
+  }
+
+  return process.env.JWT_SECRET;
+};
+
 const signToken = (user) =>
   jwt.sign(
     {
       sub: user._id.toString(),
       role: user.role,
     },
-    process.env.JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: "7d" }
   );
 
@@ -20,7 +28,7 @@ const protect = async (req, res, next) => {
     }
 
     const token = authorization.split(" ")[1];
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, getJwtSecret());
     const user = await User.findById(payload.sub).select("-password");
 
     if (!user) {
